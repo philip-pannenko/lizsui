@@ -15,15 +15,20 @@ class Metrics extends Component {
     }
 
     fetchMetrics = async (date) => {
-        console.log("Fetching Metrics for date: " + date);
+        debugger;
+        if (date === null || date === undefined || 0 === date.trim().length) {
+            this.setState({metrics: []});
+        } else {
 
-        try {
-            let response = await fetch('http://5cb7f2151551570014da3a0c.mockapi.io/metrics');
-            const json = await response.json();
-            let data = generateMetricsData(); //json
-            this.setState({metrics: data});
-        } catch (e) {
-            console.error(e);
+            try {
+                let response = await fetch(`metric/1/${date}`);
+                const json = await response.json();
+                // let data = generateMetricsData(); //json
+                let data = json;
+                this.setState({metrics: data});
+            } catch (e) {
+                console.error(e);
+            }
         }
     };
 
@@ -38,9 +43,8 @@ class Metrics extends Component {
         };
 
         try {
-            const response = await fetch('http://5cb7f2151551570014da3a0c.mockapi.io/metrics/' + metric.id, settings);
+            const response = await fetch(`metric/${metric.id}`, settings);
             const json = await response.json();
-            console.log("Successfully updated Metric[" + metric.id + "] with new value, " + metric.value);
             return json;
         } catch (e) {
             console.error(e);
@@ -55,12 +59,14 @@ class Metrics extends Component {
         this.setState({date: value});
     };
 
-    handleMetricChange = (event) => {
+    handleMetricChange = async (event) => {
+        let {date} = this.state;
         let id = Number(event.target.dataset.id);
         let value = Number(event.target.value);
         let metric = {id: id, value: value};
-        this.updateMetric(metric);
-        this.setState({value: event.target.value});
+        await this.updateMetric(metric);
+        await this.fetchMetrics(date);
+        // this.setState({value: event.target.value});
     };
 
 
@@ -78,24 +84,24 @@ class Metrics extends Component {
                     </div>
                 </form>
 
-                {metrics.map((item, index) => (
+                {metrics.map((mc, index) => (
                     <table key={index} className="u-full-width">
                         <thead>
                         <tr>
-                            <th>Group Name - {item.name}</th>
-                            <th>Sum - {item.sum}</th>
+                            <th>Group Name - {mc.name}</th>
+                            <th>Sum - {mc.sum}</th>
                         </tr>
                         </thead>
 
                         <tbody>
-                        {item.metrics.map((item, index) => (
+                        {mc.metrics.map((m, index) => (
                             <tr key={index}>
-                                <td>{item.name}</td>
+                                <td>{m.name}</td>
                                 <td>
-                                    <input data-id={item.id}
-                                           type="number" pattern="[0-9]*"
+                                    <input data-id={m.values.id}
+                                           type="number"
                                            name="name"
-                                           value={item.value}
+                                           value={m.values.value}
                                            onChange={this.handleMetricChange}/>
                                 </td>
                             </tr>

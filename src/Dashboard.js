@@ -16,21 +16,22 @@ class Dashboard extends Component {
 
     fetchDashboard = async (date) => {
         console.log("Fetching Metrics for date: " + date);
+        let userGroup = 1;
 
         try {
-            let response = await fetch('http://5cb7f2151551570014da3a0c.mockapi.io/metrics');
+            let response = await fetch(`dashboard/${userGroup}/${date}`);
             const json = await response.json();
-            let data = generateDashboardData(); //json
+            // let data = generateDashboardData(); //json
+            let data = json;
             this.setState({dashboard: data});
         } catch (e) {
             console.error(e);
         }
-
     };
 
-    handleCalendarChange = (event) => {
+    handleCalendarChange = async (event) => {
         let value = event.target.value;
-        this.fetchMetrics(value);
+        await this.fetchDashboard(value);
         this.setState({date: value});
     };
 
@@ -48,31 +49,30 @@ class Dashboard extends Component {
                     </div>
                 </form>
 
-                {dashboard.map((item, index) => (
-                    <div>
-                        <table key={index} className="u-full-width">
-                            <thead>
-                            <tr>
-                                <th>{item.name}</th>
-                                <th>Totals</th>
-                                {item.users.map((item, index) => (
-                                    <th key={index}>{item.name}</th>
+                {dashboard.map((mc, index) => (
+                    <table key={index} className="u-full-width">
+                        <thead>
+                        <tr>
+                            <th>{mc.name}</th>
+                            <th>Totals</th>
+                            {mc.header.map((header, index) => (
+                                <th key={index}>{header}</th>
+                            ))}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {mc.metrics.map((m, index) => (
+                            <tr key={index}>
+                                <td>{m.name}</td>
+                                <td> {m.sum} </td>
+                                {m.values.map((item, index) => (
+                                    <td key={index}>{item.value}</td>
                                 ))}
                             </tr>
-                            </thead>
-                            <tbody>
-                            {item.metrics.map((item, index) => (
-                                <tr key={index}>
-                                    <td>{item.name}</td>
-                                    <td> {item.sum} </td>
-                                    {item.values.map((item, index) => (
-                                        <td key={index}>{item.value}</td>
-                                    ))};
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </div>
+                        ))}
+                        </tbody>
+                    </table>
+
                 ))}
             </div>
         );
